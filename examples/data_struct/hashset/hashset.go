@@ -1,4 +1,4 @@
-package hashset
+package main
 
 import (
 	"fmt"
