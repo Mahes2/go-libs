@@ -23,9 +23,12 @@ func (stack *Stack[T]) Peek() T {
 }
 
 func (stack *Stack[T]) Pop() T {
-	lastElement := stack.Peek()
+	var lastElement T
 
-	stack.items = stack.items[:len(stack.items)-1]
+	if len(stack.items) > 0 {
+		lastElement = stack.Peek()
+		stack.items = stack.items[:len(stack.items)-1]
+	}
 
 	return lastElement
 }
