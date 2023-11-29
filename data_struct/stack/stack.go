@@ -40,3 +40,7 @@ func (stack *Stack[T]) IsEmpty() bool {
 func (stack *Stack[T]) Size() int {
 	return len(stack.items)
 }
+
+func (stack *Stack[T]) Clear() {
+	stack.items = make([]T, 0)
+}

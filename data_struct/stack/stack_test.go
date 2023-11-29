@@ -47,3 +47,16 @@ func TestPeek(t *testing.T) {
 		t.Error("stack size is not 3")
 	}
 }
+
+func TestClear(t *testing.T) {
+	stack := NewStack[int]()
+	stack.Push(1)
+	stack.Push(2)
+	stack.Push(3)
+
+	stack.Clear()
+
+	if !stack.IsEmpty() {
+		t.Error("stack is not empty")
+	}
+}
