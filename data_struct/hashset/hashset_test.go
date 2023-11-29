@@ -197,3 +197,117 @@ func TestHashSet_ToSlice(t *testing.T) {
 		t.Errorf("Expected slice length to be %d but got %d", hashSet.Size(), len(slice))
 	}
 }
+
+func BenchmarkHashSetAdd100(b *testing.B) {
+	hashSet := NewHashSet[int]()
+	b.StopTimer()
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < 100; j++ {
+			hashSet.Add(j)
+		}
+	}
+}
+
+func BenchmarkHashSetAdd10000(b *testing.B) {
+	hashSet := NewHashSet[int]()
+	b.StopTimer()
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < 10000; j++ {
+			hashSet.Add(j)
+		}
+	}
+}
+
+func BenchmarkHashSetAdd1000000(b *testing.B) {
+	hashSet := NewHashSet[int]()
+	b.StopTimer()
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < 1000000; j++ {
+			hashSet.Add(j)
+		}
+	}
+}
+
+func BenchmarkHashSetRemove100(b *testing.B) {
+	hashSet := NewHashSet[int]()
+
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		for j := 0; j < 100; j++ {
+			hashSet.Add(j)
+		}
+		b.StartTimer()
+		for j := 0; j < 100; j++ {
+			hashSet.Remove(j)
+		}
+	}
+}
+
+func BenchmarkHashSetRemove10000(b *testing.B) {
+	hashSet := NewHashSet[int]()
+
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		for j := 0; j < 10000; j++ {
+			hashSet.Add(j)
+		}
+		b.StartTimer()
+		for j := 0; j < 10000; j++ {
+			hashSet.Remove(j)
+		}
+	}
+}
+
+func BenchmarkHashSetRemove1000000(b *testing.B) {
+	hashSet := NewHashSet[int]()
+
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		for j := 0; j < 1000000; j++ {
+			hashSet.Add(j)
+		}
+		b.StartTimer()
+		for j := 0; j < 1000000; j++ {
+			hashSet.Remove(j)
+		}
+	}
+}
+
+func BenchmarkHashSetContains100(b *testing.B) {
+	hashSet := NewHashSet[int]()
+	for j := 0; j < 100; j++ {
+		hashSet.Add(j)
+	}
+	b.StopTimer()
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		_ = hashSet.Contains(50)
+	}
+}
+
+func BenchmarkHashSetContains10000(b *testing.B) {
+	hashSet := NewHashSet[int]()
+	for j := 0; j < 10000; j++ {
+		hashSet.Add(j)
+	}
+	b.StopTimer()
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		_ = hashSet.Contains(5000)
+	}
+}
+
+func BenchmarkHashSetContains1000000(b *testing.B) {
+	hashSet := NewHashSet[int]()
+	for j := 0; j < 1000000; j++ {
+		hashSet.Add(j)
+	}
+	b.StopTimer()
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		_ = hashSet.Contains(500000)
+	}
+}
