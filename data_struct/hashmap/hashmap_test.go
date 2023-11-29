@@ -108,3 +108,117 @@ func TestKeySet(t *testing.T) {
 		t.Errorf("Expected key set to contain 2 keys but got %d", len(keys))
 	}
 }
+
+func BenchmarkHashMapPut100(b *testing.B) {
+	hashMap := NewHashMap[int, string]()
+	b.StopTimer()
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < 100; j++ {
+			hashMap.Put(j, "test")
+		}
+	}
+}
+
+func BenchmarkHashMapPut10000(b *testing.B) {
+	hashMap := NewHashMap[int, string]()
+	b.StopTimer()
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < 10000; j++ {
+			hashMap.Put(j, "test")
+		}
+	}
+}
+
+func BenchmarkHashMapPut1000000(b *testing.B) {
+	hashMap := NewHashMap[int, string]()
+	b.StopTimer()
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < 1000000; j++ {
+			hashMap.Put(j, "test")
+		}
+	}
+}
+
+func BenchmarkHashMapRemove100(b *testing.B) {
+	hashMap := NewHashMap[int, string]()
+
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		for j := 0; j < 100; j++ {
+			hashMap.Put(j, "test")
+		}
+		b.StartTimer()
+		for j := 0; j < 100; j++ {
+			hashMap.Remove(j)
+		}
+	}
+}
+
+func BenchmarkHashMapRemove10000(b *testing.B) {
+	hashMap := NewHashMap[int, string]()
+
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		for j := 0; j < 10000; j++ {
+			hashMap.Put(j, "test")
+		}
+		b.StartTimer()
+		for j := 0; j < 10000; j++ {
+			hashMap.Remove(j)
+		}
+	}
+}
+
+func BenchmarkHashMapRemove1000000(b *testing.B) {
+	hashMap := NewHashMap[int, string]()
+
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		for j := 0; j < 1000000; j++ {
+			hashMap.Put(j, "test")
+		}
+		b.StartTimer()
+		for j := 0; j < 1000000; j++ {
+			hashMap.Remove(j)
+		}
+	}
+}
+
+func BenchmarkHashMapContains100(b *testing.B) {
+	hashMap := NewHashMap[int, string]()
+	for j := 0; j < 100; j++ {
+		hashMap.Put(j, "test")
+	}
+	b.StopTimer()
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		_ = hashMap.ContainsKey(50)
+	}
+}
+
+func BenchmarkHashMapContains10000(b *testing.B) {
+	hashMap := NewHashMap[int, string]()
+	for j := 0; j < 10000; j++ {
+		hashMap.Put(j, "test")
+	}
+	b.StopTimer()
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		_ = hashMap.ContainsKey(5000)
+	}
+}
+
+func BenchmarkHashMapContains1000000(b *testing.B) {
+	hashMap := NewHashMap[int, string]()
+	for j := 0; j < 1000000; j++ {
+		hashMap.Put(j, "test")
+	}
+	b.StopTimer()
+	b.StartTimer()
+	for i := 0; i < b.N; i++ {
+		_ = hashMap.ContainsKey(500000)
+	}
+}
