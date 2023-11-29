@@ -26,7 +26,7 @@ func (stack *Stack[T]) Pop() T {
 	var lastElement T
 
 	if len(stack.items) > 0 {
-		lastElement = stack.Peek()
+		lastElement = stack.items[len(stack.items)-1]
 		stack.items = stack.items[:len(stack.items)-1]
 	}
 
