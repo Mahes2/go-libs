@@ -1,3 +1,7 @@
+[![Go Reference](https://pkg.go.dev/badge/github.com/Mahes2/go-libs.svg)](https://pkg.go.dev/github.com/Mahes2/go-libs)
+[![GitHub release (with filter)](https://img.shields.io/github/v/release/Mahes2/go-libs)](https://github.com/Mahes2/go-libs/releases/latest)
+[![GitHub License](https://img.shields.io/github/license/Mahes2/go-libs)](https://github.com/Mahes2/go-libs/blob/master/LICENSE)
+
 # go-libs 🚀
 
 Welcome to **go-libs**, a repository dedicated to providing small, useful utilities in Golang. The primary goal of this project is to offer a collection of handy tools and utilities that can be beneficial for developers in various scenarios.
