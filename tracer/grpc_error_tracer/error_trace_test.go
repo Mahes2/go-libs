@@ -9,10 +9,14 @@ import (
 )
 
 func TestNewError(t *testing.T) {
-	originalErr := status.Error(codes.InvalidArgument, "this is a sample exception")
+	code := codes.InvalidArgument
+	originalErr := status.Error(code, "this is a sample exception")
 	customErr := "internal server error"
 	newError := NewError(status.Code(originalErr), originalErr.Error(), customErr)
-	if newError.Error() != customErr {
+	if newError.(*errorTracer).GRPCStatus().Code() != code {
+		t.Errorf("gprc status code is not %s", code.String())
+	}
+	if newError.(*errorTracer).GRPCStatus().String() != customErr {
 		t.Errorf("new error is not as expected: %s", customErr)
 	}
 }

@@ -29,6 +29,10 @@ func (errTracer *errorTracer) Error() string {
 	return errTracer.originalError
 }
 
+func (errTracer *errorTracer) GRPCStatus() *status.Status {
+	return status.New(errTracer.code, errTracer.Error())
+}
+
 func NewError(code codes.Code, originalError, customError string) error {
 	return newErrorTracer(code, originalError, customError, nil)
 }
