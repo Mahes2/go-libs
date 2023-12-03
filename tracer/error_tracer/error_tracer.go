@@ -123,17 +123,11 @@ func (errTracer *errorTracer) log() {
 	var sb strings.Builder
 
 	sb.WriteString(fmt.Sprintf("Original Error: %s\n", errTracer.getOriginalError().Error()))
-	sb.WriteString(fmt.Sprintf("Custom Error: %s\n", errTracer.getCustomError().Error()))
+	sb.WriteString(fmt.Sprintf("Custom Error: %s\n\n", errTracer.getCustomError().Error()))
 
-	sb.WriteString(strings.Join(errTracer.stackTrace, "\n"))
+	sb.WriteString(fmt.Sprintf("Traces: \n%s\n", errTracer.getStackTraceList()))
 
-	if errTracer.additionalData != nil {
-		sb.WriteString("\nAdditional Data:")
-		for key, value := range errTracer.additionalData {
-			jsonStr, _ := json.Marshal(value)
-			sb.WriteString(fmt.Sprintf("\n%s: %v", key, string(jsonStr)))
-		}
-	}
+	sb.WriteString(fmt.Sprintf("Additional Data: %s", errTracer.getAdditionalDataList()))
 
 	fmt.Println(sb.String())
 }
@@ -148,4 +142,26 @@ func (errTracer *errorTracer) getCustomError() error {
 	}
 
 	return errTracer.customError
+}
+
+func (errTracer *errorTracer) getStackTraceList() string {
+	var str string
+	for _, v := range errTracer.stackTrace {
+		if v == "" {
+			break
+		}
+		str += v + "\n"
+	}
+
+	return str
+}
+
+func (errTracer *errorTracer) getAdditionalDataList() string {
+	var str string
+	for key, value := range errTracer.additionalData {
+		jsonStr, _ := json.Marshal(value)
+		str += fmt.Sprintf("\n%s: %v", key, string(jsonStr))
+	}
+
+	return str
 }
