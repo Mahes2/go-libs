@@ -16,7 +16,7 @@ func TestNewError(t *testing.T) {
 	if newError.(*errorTracer).GRPCStatus().Code() != code {
 		t.Errorf("gprc status code is not %s", code.String())
 	}
-	if newError.(*errorTracer).GRPCStatus().String() != customErr {
+	if newError.(*errorTracer).Error() != customErr {
 		t.Errorf("new error is not as expected: %s", customErr)
 	}
 }
@@ -34,7 +34,7 @@ func TestNewErrorWithData(t *testing.T) {
 
 func TestWrapError(t *testing.T) {
 	err := fmt.Errorf("this is a sample exception")
-	newError := Wrap(err)
+	newError := WrapAndLog(err)
 	if newError.Error() != err.Error() {
 		t.Errorf("new error is not as expected: %s", err.Error())
 	}
@@ -42,7 +42,7 @@ func TestWrapError(t *testing.T) {
 
 func TestWrapErrorWithAdditionalData(t *testing.T) {
 	err := fmt.Errorf("this is a sample exception")
-	newError := WrapWithData(err, map[string]interface{}{
+	newError := WrapWithDataAndLog(err, map[string]interface{}{
 		"name": "go-libs",
 	})
 	if newError.Error() != err.Error() {

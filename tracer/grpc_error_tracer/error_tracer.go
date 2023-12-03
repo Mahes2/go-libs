@@ -20,8 +20,6 @@ type errorTracer struct {
 }
 
 func (errTracer *errorTracer) Error() string {
-	errTracer.log()
-
 	if errTracer.customError != "" {
 		return errTracer.customError
 	}
@@ -42,24 +40,27 @@ func NewErrorWithData(code codes.Code, originalError, customError string, additi
 }
 
 func Wrap(err error) error {
-	errTracer, ok := err.(*errorTracer)
-	if !ok {
-		return newErrorTracer(status.Code(err), err.Error(), "", nil)
-	}
+	return wrap(err)
+}
 
-	errTracer.addTrace(4)
+func WrapAndLog(err error) error {
+	errorTracer := wrap(err)
+	errorTracer.log()
+
+	return errorTracer
+}
+
+func WrapWithData(err error, additionalData map[string]interface{}) error {
+	errTracer := wrap(err)
+	errTracer.addMoreData(additionalData)
 
 	return errTracer
 }
 
-func WrapWithData(err error, additionalData map[string]interface{}) error {
-	errTracer, ok := err.(*errorTracer)
-	if !ok {
-		return newErrorTracer(status.Code(err), err.Error(), "", additionalData)
-	}
-
+func WrapWithDataAndLog(err error, additionalData map[string]interface{}) error {
+	errTracer := wrap(err)
 	errTracer.addMoreData(additionalData)
-	errTracer.addTrace(4)
+	errTracer.log()
 
 	return errTracer
 }
@@ -73,6 +74,17 @@ func newErrorTracer(code codes.Code, originalError, customError string, addition
 
 	errTracer.addMoreData(additionalData)
 	errTracer.addTrace(5)
+
+	return errTracer
+}
+
+func wrap(err error) *errorTracer {
+	errTracer, ok := err.(*errorTracer)
+	if !ok {
+		return newErrorTracer(status.Code(err), err.Error(), "", nil)
+	}
+
+	errTracer.addTrace(4)
 
 	return errTracer
 }

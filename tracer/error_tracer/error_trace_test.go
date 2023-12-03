@@ -27,7 +27,7 @@ func TestNewErrorWithData(t *testing.T) {
 
 func TestWrapError(t *testing.T) {
 	err := fmt.Errorf("this is a sample exception")
-	newError := Wrap(err)
+	newError := WrapAndLog(err)
 	if newError.Error() != err.Error() {
 		t.Errorf("new error is not as expected: %s", err.Error())
 	}
@@ -35,7 +35,7 @@ func TestWrapError(t *testing.T) {
 
 func TestWrapErrorWithAdditionalData(t *testing.T) {
 	err := fmt.Errorf("this is a sample exception")
-	newError := WrapWithData(err, map[string]interface{}{
+	newError := WrapWithDataAndLog(err, map[string]interface{}{
 		"name": "go-libs",
 	})
 	if newError.Error() != err.Error() {
