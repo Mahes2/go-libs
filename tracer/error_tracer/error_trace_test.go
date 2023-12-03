@@ -6,22 +6,22 @@ import (
 )
 
 func TestNewError(t *testing.T) {
-	originalErr := fmt.Errorf("this is a sample exception")
-	customErr := fmt.Errorf("internal server error")
+	originalErr := "this is a sample exception"
+	customErr := "internal server error"
 	newError := NewError(originalErr, customErr)
-	if newError.Error() != customErr.Error() {
-		t.Errorf("new error is not as expected: %s", customErr.Error())
+	if newError.Error() != customErr {
+		t.Errorf("new error is not as expected: %s", customErr)
 	}
 }
 
 func TestNewErrorWithData(t *testing.T) {
-	originalErr := fmt.Errorf("this is a sample exception")
+	originalErr := "this is a sample exception"
 	additionalData := map[string]interface{}{
 		"name": "go-libs",
 	}
-	newError := NewErrorWithData(originalErr, nil, additionalData)
-	if newError.Error() != originalErr.Error() {
-		t.Errorf("new error is not as expected: %s", originalErr.Error())
+	newError := NewErrorWithData(originalErr, "", additionalData)
+	if newError.Error() != originalErr {
+		t.Errorf("new error is not as expected: %s", originalErr)
 	}
 }
 
