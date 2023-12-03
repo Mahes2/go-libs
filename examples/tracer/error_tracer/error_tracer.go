@@ -33,5 +33,5 @@ func testFunction2() error {
 
 func testFunction3() error {
 	err := fmt.Errorf("this a sample exception")
-	return errortracer.NewError(err, fmt.Errorf("internal server error"))
+	return errortracer.NewError(err.Error(), "internal server error")
 }

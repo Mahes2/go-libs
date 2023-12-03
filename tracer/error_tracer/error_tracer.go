@@ -8,8 +8,8 @@ import (
 )
 
 type errorTracer struct {
-	originalError  error
-	customError    error
+	originalError  string
+	customError    string
 	additionalData map[string]interface{}
 	stackTrace     []string
 	traceCount     int
@@ -18,25 +18,25 @@ type errorTracer struct {
 func (errTracer *errorTracer) Error() string {
 	errTracer.log()
 
-	if errTracer.customError != nil {
-		return errTracer.customError.Error()
+	if errTracer.customError != "" {
+		return errTracer.customError
 	}
 
-	return errTracer.originalError.Error()
+	return errTracer.originalError
 }
 
-func NewError(originalError, customError error) error {
+func NewError(originalError, customError string) error {
 	return newErrorTracer(originalError, customError, nil)
 }
 
-func NewErrorWithData(originalError, customError error, additionalData map[string]interface{}) error {
+func NewErrorWithData(originalError, customError string, additionalData map[string]interface{}) error {
 	return newErrorTracer(originalError, customError, additionalData)
 }
 
 func Wrap(err error) error {
 	errTracer, ok := err.(*errorTracer)
 	if !ok {
-		return newErrorTracer(err, nil, nil)
+		return newErrorTracer(err.Error(), "", nil)
 	}
 
 	errTracer.addTrace(4)
@@ -47,7 +47,7 @@ func Wrap(err error) error {
 func WrapWithData(err error, additionalData map[string]interface{}) error {
 	errTracer, ok := err.(*errorTracer)
 	if !ok {
-		return newErrorTracer(err, nil, additionalData)
+		return newErrorTracer(err.Error(), "", additionalData)
 	}
 
 	errTracer.addMoreData(additionalData)
@@ -56,7 +56,7 @@ func WrapWithData(err error, additionalData map[string]interface{}) error {
 	return errTracer
 }
 
-func newErrorTracer(originalError, customError error, additionalData map[string]interface{}) *errorTracer {
+func newErrorTracer(originalError, customError string, additionalData map[string]interface{}) *errorTracer {
 	errTracer := &errorTracer{
 		originalError: originalError,
 		customError:   customError,
@@ -122,8 +122,8 @@ func getCallerDetail(skip int) string {
 func (errTracer *errorTracer) log() {
 	var sb strings.Builder
 
-	sb.WriteString(fmt.Sprintf("Original Error: %s\n", errTracer.getOriginalError().Error()))
-	sb.WriteString(fmt.Sprintf("Custom Error: %s\n\n", errTracer.getCustomError().Error()))
+	sb.WriteString(fmt.Sprintf("Original Error: %s\n", errTracer.getOriginalError()))
+	sb.WriteString(fmt.Sprintf("Custom Error: %s\n\n", errTracer.getCustomError()))
 
 	sb.WriteString(fmt.Sprintf("Traces: \n%s\n", errTracer.getStackTraceList()))
 
@@ -132,15 +132,11 @@ func (errTracer *errorTracer) log() {
 	fmt.Println(sb.String())
 }
 
-func (errTracer *errorTracer) getOriginalError() error {
+func (errTracer *errorTracer) getOriginalError() string {
 	return errTracer.originalError
 }
 
-func (errTracer *errorTracer) getCustomError() error {
-	if errTracer.customError == nil {
-		return fmt.Errorf("")
-	}
-
+func (errTracer *errorTracer) getCustomError() string {
 	return errTracer.customError
 }
 
