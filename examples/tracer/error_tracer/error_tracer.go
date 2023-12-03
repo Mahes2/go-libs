@@ -12,7 +12,7 @@ func main() {
 	})
 
 	err := testFunction1()
-	newError := errortracer.WrapWithData(err, map[string]interface{}{
+	newError := errortracer.WrapWithDataAndLog(err, map[string]interface{}{
 		"request": "test",
 	})
 

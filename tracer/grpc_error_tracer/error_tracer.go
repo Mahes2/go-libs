@@ -40,25 +40,25 @@ func NewErrorWithData(code codes.Code, originalError, customError string, additi
 }
 
 func Wrap(err error) error {
-	return wrap(err)
+	return wrap(err, 4)
 }
 
 func WrapAndLog(err error) error {
-	errorTracer := wrap(err)
+	errorTracer := wrap(err, 5)
 	errorTracer.log()
 
 	return errorTracer
 }
 
 func WrapWithData(err error, additionalData map[string]interface{}) error {
-	errTracer := wrap(err)
+	errTracer := wrap(err, 5)
 	errTracer.addMoreData(additionalData)
 
 	return errTracer
 }
 
 func WrapWithDataAndLog(err error, additionalData map[string]interface{}) error {
-	errTracer := wrap(err)
+	errTracer := wrap(err, 5)
 	errTracer.addMoreData(additionalData)
 	errTracer.log()
 
@@ -78,13 +78,13 @@ func newErrorTracer(code codes.Code, originalError, customError string, addition
 	return errTracer
 }
 
-func wrap(err error) *errorTracer {
+func wrap(err error, skip int) *errorTracer {
 	errTracer, ok := err.(*errorTracer)
 	if !ok {
 		return newErrorTracer(status.Code(err), err.Error(), "", nil)
 	}
 
-	errTracer.addTrace(4)
+	errTracer.addTrace(skip)
 
 	return errTracer
 }

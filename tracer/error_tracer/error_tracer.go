@@ -31,37 +31,26 @@ func NewErrorWithData(originalError, customError string, additionalData map[stri
 	return newErrorTracer(originalError, customError, additionalData)
 }
 
-func wrap(err error) *errorTracer {
-	errTracer, ok := err.(*errorTracer)
-	if !ok {
-		return newErrorTracer(err.Error(), "", nil)
-	}
-
-	errTracer.addTrace(4)
-
-	return errTracer
-}
-
 func Wrap(err error) error {
-	return wrap(err)
+	return wrap(err, 4)
 }
 
 func WrapAndLog(err error) error {
-	errTracer := wrap(err)
+	errTracer := wrap(err, 5)
 	errTracer.log()
 
 	return errTracer
 }
 
 func WrapWithData(err error, additionalData map[string]interface{}) error {
-	errTracer := wrap(err)
+	errTracer := wrap(err, 5)
 	errTracer.addMoreData(additionalData)
 
 	return errTracer
 }
 
 func WrapWithDataAndLog(err error, additionalData map[string]interface{}) error {
-	errTracer := wrap(err)
+	errTracer := wrap(err, 5)
 	errTracer.addMoreData(additionalData)
 	errTracer.log()
 
@@ -76,6 +65,17 @@ func newErrorTracer(originalError, customError string, additionalData map[string
 
 	errTracer.addMoreData(additionalData)
 	errTracer.addTrace(5)
+
+	return errTracer
+}
+
+func wrap(err error, skip int) *errorTracer {
+	errTracer, ok := err.(*errorTracer)
+	if !ok {
+		return newErrorTracer(err.Error(), "", nil)
+	}
+
+	errTracer.addTrace(skip)
 
 	return errTracer
 }
