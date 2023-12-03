@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"go-libs/data_struct/hashmap"
+
+	"github.com/Mahes2/go-libs/data_struct/hashmap"
 )
 
 func main() {
