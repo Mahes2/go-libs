@@ -78,7 +78,7 @@ func TestMarshal(t *testing.T) {
 					Extension:            E_SensitiveMessage,
 				},
 			},
-			expectedJsonString: "{\"field1\":1,\"field2\":\"Hello World\",\"field3\":{\"field2\":\"Encoder\"},\"field5\":[{\"field1\":3,\"field2\":[\"A\",\"B\",\"C\"]},{\"field1\":4,\"field2\":[\"D\",\"E\",\"F\",\"G\"]}],\"field6\":{},\"field8\":true}",
+			expectedJsonString: `{"field1":1,"field2":"Hello World","field3":{"field2":"Encoder"},"field5":[{"field1":3,"field2":["A","B","C"]},{"field1":4,"field2":["D","E","F","G"]}],"field6":{},"field8":true}`,
 		},
 		{
 			name: "HideSensitiveDataWithOtherMarshaller",
@@ -138,7 +138,7 @@ func TestMarshal(t *testing.T) {
 					Extension:            E_SensitiveMessage,
 				},
 			},
-			expectedJsonString: "{\"field1\":1,\"field2\":\"Hello World\",\"field3\":{\"field2\":\"Encoder\"},\"field5\":[{\"field1\":3,\"field2\":[\"A\",\"B\",\"C\"]},{\"field1\":4,\"field2\":[\"D\",\"E\",\"F\",\"G\"]}],\"field6\":{},\"field8\":true}",
+			expectedJsonString: `{"field1":1,"field2":"Hello World","field3":{"field2":"Encoder"},"field5":[{"field1":3,"field2":["A","B","C"]},{"field1":4,"field2":["D","E","F","G"]}],"field6":{},"field8":true}`,
 		},
 	}
 
@@ -156,7 +156,7 @@ func TestMarshal(t *testing.T) {
 			if err != nil {
 				t.Errorf("unexpected error %q", err)
 			}
-			if test.expectedJsonString != string(jsonBytes) {
+			if string(jsonBytes) != test.expectedJsonString {
 				t.Errorf("got json string %s, want %s", string(jsonBytes), test.expectedJsonString)
 			}
 		})
@@ -172,7 +172,7 @@ func BenchmarkMarshal_HidingSensitiveData(b *testing.B) {
 	}
 	message := &GetResponse{}
 
-	for i := 0; i < 100000; i++ {
+	for i := 0; i < b.N; i++ {
 		options.Marshal(message)
 	}
 }
@@ -185,7 +185,7 @@ func BenchmarkMarshal_NoHidingSensitiveData(b *testing.B) {
 	}
 	message := &GetResponse{}
 
-	for i := 0; i < 100000; i++ {
+	for i := 0; i < b.N; i++ {
 		options.Marshal(message)
 	}
 }
