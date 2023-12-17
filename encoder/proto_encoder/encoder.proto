@@ -7,7 +7,7 @@ package com.Mahes2.encoder;
 option go_package = "github.com/Mahes2/go-libs/encoder";
 
 extend google.protobuf.FieldOptions {
-    bool sensitive_message = 50002;
+    bool sensitive_message = 50001;
 }
 
 service Test {
