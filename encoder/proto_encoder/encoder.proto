@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+import "google/protobuf/descriptor.proto";
+import "google/protobuf/empty.proto";
+
+package com.Mahes2.encoder;
+option go_package = "github.com/Mahes2/go-libs/encoder";
+
+extend google.protobuf.FieldOptions {
+    bool sensitive_message = 50002;
+}
+
+service Test {
+    rpc Get(google.protobuf.Empty) returns (GetResponse){}
+}
+
+message Message1 {
+    int32 field1 = 1 [(sensitive_message)=true];
+    string field2 = 2;
+}
+
+message Message2 {
+    bool field1 = 1;
+    string field2 = 2;
+}
+
+message Message3 {
+    int32 field1 = 1;
+    repeated string field2 = 2;
+}
+
+message Message4 {
+    repeated Message2 field1 = 1 [(sensitive_message)=true];
+}
+
+message GetResponse {
+    int32 field1 = 1;
+    string field2 = 2;
+    Message1 field3 = 3;
+    Message2 field4 = 4 [(sensitive_message)=true];
+    repeated Message3 field5 = 5;
+    Message4 field6 = 6;
+    map<string, bool> field7 = 7 [(sensitive_message)=true];
+    bool field8 = 8;
+}
