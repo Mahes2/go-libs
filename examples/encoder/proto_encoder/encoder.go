@@ -14,18 +14,17 @@ func (j JsonMarshaller) Marshal(v interface{}) ([]byte, error) {
 }
 
 func main() {
-	encoder.Init(JsonMarshaller{})
-
-	message := buildMessage()
-
 	options := encoder.Options{
 		SensitiveMessageOptions: encoder.SensitiveMessageOptions{
 			HideSensitiveMessage: true,
 			Extension:            encoder.E_SensitiveMessage,
 		},
 	}
+	enc := encoder.Init(options, JsonMarshaller{})
 
-	jsonBytes, _ := options.Marshal(message)
+	message := buildMessage()
+
+	jsonBytes, _ := enc.Marshal(message)
 	fmt.Println(string(jsonBytes))
 }
 

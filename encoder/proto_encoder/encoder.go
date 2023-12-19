@@ -2,6 +2,7 @@ package encoder
 
 import (
 	"encoding/json"
+	"errors"
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -11,10 +12,18 @@ type Marshaller interface {
 	Marshal(v interface{}) ([]byte, error)
 }
 
-var marshaller Marshaller
+type Encoder struct {
+	marshaller Marshaller
+	Options
+}
 
-func Init(m Marshaller) {
-	marshaller = m
+type Options struct {
+	SensitiveMessageOptions
+}
+
+type SensitiveMessageOptions struct {
+	HideSensitiveMessage bool
+	Extension            protoreflect.ExtensionType
 }
 
 type DefaultJSONMarshaller struct{}
@@ -23,44 +32,53 @@ func (DefaultJSONMarshaller) Marshal(v interface{}) ([]byte, error) {
 	return json.Marshal(v)
 }
 
-type SensitiveMessageOptions struct {
-	HideSensitiveMessage bool
-	Extension            protoreflect.ExtensionType
+func InitWithDefaultMarshaller(o Options) Encoder {
+	return Encoder{
+		marshaller: DefaultJSONMarshaller{},
+		Options:    o,
+	}
 }
 
-type Options struct {
-	SensitiveMessageOptions
-}
-
-func (o Options) Marshal(m proto.Message) ([]byte, error) {
-	if marshaller == nil {
-		marshaller = DefaultJSONMarshaller{}
+func Init(o Options, m Marshaller) Encoder {
+	if m == nil {
+		return InitWithDefaultMarshaller(o)
 	}
 
-	if o.SensitiveMessageOptions.HideSensitiveMessage {
-		m = o.clearProtoFields(m)
+	return Encoder{
+		marshaller: DefaultJSONMarshaller{},
+		Options:    o,
 	}
-
-	return marshaller.Marshal(m)
 }
 
-func (o Options) clearProtoFields(msg proto.Message) proto.Message {
+func (e Encoder) Marshal(m proto.Message) ([]byte, error) {
+	if e.marshaller == nil {
+		return nil, errors.New("marshaller hasn't been initialized")
+	}
+
+	if e.SensitiveMessageOptions.HideSensitiveMessage {
+		m = e.clearProtoFields(m)
+	}
+
+	return e.marshaller.Marshal(m)
+}
+
+func (e Encoder) clearProtoFields(msg proto.Message) proto.Message {
 	clonedMsg := proto.Clone(msg)
 	reflectMsg := clonedMsg.ProtoReflect()
 
 	reflectMsg.Range(func(fd protoreflect.FieldDescriptor, val protoreflect.Value) bool {
-		return o.visitMessage(reflectMsg, fd, val)
+		return e.visitMessage(reflectMsg, fd, val)
 	})
 
 	return clonedMsg
 }
 
-func (o Options) visitMessage(
+func (e Encoder) visitMessage(
 	message protoreflect.Message,
 	fd protoreflect.FieldDescriptor,
 	val protoreflect.Value,
 ) bool {
-	if o.clearField(message, fd) {
+	if e.clearField(message, fd) {
 		return true
 	}
 
@@ -72,21 +90,21 @@ func (o Options) visitMessage(
 		for i := 0; i < listVal.Len(); i++ {
 			elem := listVal.Get(i)
 			elem.Message().Range(func(fd protoreflect.FieldDescriptor, v protoreflect.Value) bool {
-				return o.visitMessage(elem.Message(), fd, v)
+				return e.visitMessage(elem.Message(), fd, v)
 			})
 		}
 	default:
 		val.Message().Range(func(fd protoreflect.FieldDescriptor, v protoreflect.Value) bool {
-			return o.visitMessage(val.Message(), fd, v)
+			return e.visitMessage(val.Message(), fd, v)
 		})
 	}
 
 	return true
 }
 
-func (o Options) clearField(message protoreflect.Message, fd protoreflect.FieldDescriptor) bool {
+func (e Encoder) clearField(message protoreflect.Message, fd protoreflect.FieldDescriptor) bool {
 	options := fd.Options()
-	if options != nil && proto.HasExtension(options, o.SensitiveMessageOptions.Extension) {
+	if options != nil && proto.HasExtension(options, e.SensitiveMessageOptions.Extension) {
 		message.Clear(fd)
 		return true
 	}
