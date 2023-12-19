@@ -104,10 +104,10 @@ func (e Encoder) visitMessage(
 
 func (e Encoder) clearField(message protoreflect.Message, fd protoreflect.FieldDescriptor) bool {
 	options := fd.Options()
-	if options != nil && proto.HasExtension(options, e.SensitiveMessageOptions.Extension) {
-		message.Clear(fd)
-		return true
+	if options == nil || !proto.HasExtension(options, e.SensitiveMessageOptions.Extension) {
+		return false
 	}
 
-	return false
+	message.Clear(fd)
+	return true
 }
