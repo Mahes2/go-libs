@@ -82,7 +82,7 @@ func TestWrapErrorWithData(t *testing.T) {
 
 func TestAddData(t *testing.T) {
 	err := &errorTracer{
-		originalError: "this is a sample exception",
+		originalMessage: "this is a sample exception",
 	}
 	additionalData := map[string]interface{}{
 		"name": "go-libs",

@@ -8,10 +8,10 @@ import (
 )
 
 type errorTracer struct {
-	originalError  string
-	userMessage    string
-	additionalData map[string]any
-	stackTrace     []uintptr
+	originalMessage string
+	userMessage     string
+	additionalData  map[string]any
+	stackTrace      []uintptr
 }
 
 func (errTracer *errorTracer) Error() string {
@@ -19,15 +19,15 @@ func (errTracer *errorTracer) Error() string {
 		return errTracer.userMessage
 	}
 
-	return errTracer.originalError
+	return errTracer.originalMessage
 }
 
-func NewError(originalError, userMessage string) error {
-	return newErrorTracer(originalError, userMessage, nil)
+func NewError(originalMessage, userMessage string) error {
+	return newErrorTracer(originalMessage, userMessage, nil)
 }
 
-func NewErrorWithData(originalError, userMessage string, additionalData map[string]any) error {
-	return newErrorTracer(originalError, userMessage, additionalData)
+func NewErrorWithData(originalMessage, userMessage string, additionalData map[string]any) error {
+	return newErrorTracer(originalMessage, userMessage, additionalData)
 }
 
 func Wrap(err error, userMessage string) error {
@@ -87,14 +87,14 @@ func Print(err error) string {
 	return errTracer.print()
 }
 
-func newErrorTracer(originalError, userMessage string, additionalData map[string]any) *errorTracer {
+func newErrorTracer(originalMessage, userMessage string, additionalData map[string]any) *errorTracer {
 	errTracer := &errorTracer{
-		originalError: originalError,
-		userMessage:   userMessage,
+		originalMessage: originalMessage,
+		userMessage:     userMessage,
+		stackTrace:      getCallerDetail(),
 	}
 
 	errTracer.addData(additionalData)
-	errTracer.addTrace()
 
 	return errTracer
 }
@@ -113,10 +113,6 @@ func (errTracer *errorTracer) addData(additionalData map[string]any) {
 	}
 }
 
-func (errTracer *errorTracer) addTrace() {
-	errTracer.stackTrace = getCallerDetail()
-}
-
 func getCallerDetail() []uintptr {
 	const depth = 32
 	var pcs [depth]uintptr
@@ -128,7 +124,7 @@ func (errTracer *errorTracer) print() string {
 	var sb strings.Builder
 
 	sb.WriteString("Original Error: ")
-	sb.WriteString(errTracer.originalError)
+	sb.WriteString(errTracer.originalMessage)
 	sb.WriteString("\nUser Message: ")
 	sb.WriteString(errTracer.userMessage)
 

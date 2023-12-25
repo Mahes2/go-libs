@@ -11,11 +11,11 @@ import (
 )
 
 type errorTracer struct {
-	code           codes.Code
-	originalError  string
-	userMessage    string
-	additionalData map[string]interface{}
-	stackTrace     []uintptr
+	code            codes.Code
+	originalMessage string
+	userMessage     string
+	additionalData  map[string]interface{}
+	stackTrace      []uintptr
 }
 
 func (errTracer *errorTracer) Error() string {
@@ -23,19 +23,19 @@ func (errTracer *errorTracer) Error() string {
 		return errTracer.userMessage
 	}
 
-	return errTracer.originalError
+	return errTracer.originalMessage
 }
 
 func (errTracer *errorTracer) GRPCStatus() *status.Status {
 	return status.New(errTracer.code, errTracer.Error())
 }
 
-func NewError(code codes.Code, originalError, userMessage string) error {
-	return newErrorTracer(code, originalError, userMessage, nil)
+func NewError(code codes.Code, originalMessage, userMessage string) error {
+	return newErrorTracer(code, originalMessage, userMessage, nil)
 }
 
-func NewErrorWithData(code codes.Code, originalError, userMessage string, additionalData map[string]interface{}) error {
-	return newErrorTracer(code, originalError, userMessage, additionalData)
+func NewErrorWithData(code codes.Code, originalMessage, userMessage string, additionalData map[string]interface{}) error {
+	return newErrorTracer(code, originalMessage, userMessage, additionalData)
 }
 
 func Wrap(err error, userMessage string) error {
@@ -95,15 +95,15 @@ func Print(err error) string {
 	return errTracer.print()
 }
 
-func newErrorTracer(code codes.Code, originalError, userMessage string, additionalData map[string]interface{}) *errorTracer {
+func newErrorTracer(code codes.Code, originalMessage, userMessage string, additionalData map[string]interface{}) *errorTracer {
 	errTracer := &errorTracer{
-		code:          code,
-		originalError: originalError,
-		userMessage:   userMessage,
+		code:            code,
+		originalMessage: originalMessage,
+		userMessage:     userMessage,
+		stackTrace:      getCallerDetail(),
 	}
 
 	errTracer.addData(additionalData)
-	errTracer.addTrace()
 
 	return errTracer
 }
@@ -122,10 +122,6 @@ func (errTracer *errorTracer) addData(additionalData map[string]interface{}) {
 	}
 }
 
-func (errTracer *errorTracer) addTrace() {
-	errTracer.stackTrace = getCallerDetail()
-}
-
 func getCallerDetail() []uintptr {
 	const depth = 32
 	var pcs [depth]uintptr
@@ -140,7 +136,7 @@ func (errTracer *errorTracer) print() string {
 	sb.WriteString(errTracer.code.String())
 
 	sb.WriteString("\nOriginal Error: ")
-	sb.WriteString(errTracer.originalError)
+	sb.WriteString(errTracer.originalMessage)
 	sb.WriteString("\nUser Message: ")
 	sb.WriteString(errTracer.userMessage)
 
