@@ -45,7 +45,7 @@ func Init(o Options, m Marshaller) Encoder {
 	}
 
 	return Encoder{
-		marshaller: DefaultJSONMarshaller{},
+		marshaller: m,
 		Options:    o,
 	}
 }
