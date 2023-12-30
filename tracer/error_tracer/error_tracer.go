@@ -2,91 +2,110 @@ package errortracer
 
 import (
 	"encoding/json"
-	"fmt"
 	"runtime"
+	"strconv"
 	"strings"
 )
 
 type errorTracer struct {
-	originalError  string
-	customError    string
-	additionalData map[string]interface{}
-	stackTrace     []string
-	traceCount     int
+	originalMessage string
+	userMessage     string
+	additionalData  map[string]any
+	stackTrace      []uintptr
 }
 
 func (errTracer *errorTracer) Error() string {
-	if errTracer.customError != "" {
-		return errTracer.customError
+	if errTracer.userMessage != "" {
+		return errTracer.userMessage
 	}
 
-	return errTracer.originalError
+	return errTracer.originalMessage
 }
 
-func NewError(originalError, customError string) error {
-	return newErrorTracer(originalError, customError, nil)
+func NewError(originalMessage, userMessage string) error {
+	return newErrorTracer(originalMessage, userMessage, nil)
 }
 
-func NewErrorWithData(originalError, customError string, additionalData map[string]interface{}) error {
-	return newErrorTracer(originalError, customError, additionalData)
+func NewErrorWithData(originalMessage, userMessage string, additionalData map[string]any) error {
+	return newErrorTracer(originalMessage, userMessage, additionalData)
 }
 
-func Wrap(err error) error {
-	return wrap(err, 4)
-}
-
-func WrapAndLog(err error) error {
-	errTracer := wrap(err, 5)
-	errTracer.log()
-
-	return errTracer
-}
-
-func WrapWithData(err error, additionalData map[string]interface{}) error {
-	errTracer := wrap(err, 5)
-	errTracer.addMoreData(additionalData)
-
-	return errTracer
-}
-
-func WrapWithDataAndLog(err error, additionalData map[string]interface{}) error {
-	errTracer := wrap(err, 5)
-	errTracer.addMoreData(additionalData)
-	errTracer.log()
-
-	return errTracer
-}
-
-func newErrorTracer(originalError, customError string, additionalData map[string]interface{}) *errorTracer {
-	errTracer := &errorTracer{
-		originalError: originalError,
-		customError:   customError,
+func Wrap(err error, userMessage string) error {
+	if err == nil {
+		return err
 	}
 
-	errTracer.addMoreData(additionalData)
-	errTracer.addTrace(5)
-
-	return errTracer
-}
-
-func wrap(err error, skip int) *errorTracer {
 	errTracer, ok := err.(*errorTracer)
 	if !ok {
-		return newErrorTracer(err.Error(), "", nil)
+		return newErrorTracer(err.Error(), userMessage, nil)
 	}
 
-	errTracer.addTrace(skip)
+	errTracer.userMessage = userMessage
+	return errTracer
+}
+
+func WrapWithData(err error, userMessage string, additionalData map[string]any) error {
+	if err == nil {
+		return err
+	}
+
+	errTracer, ok := err.(*errorTracer)
+	if !ok {
+		return newErrorTracer(err.Error(), userMessage, additionalData)
+	}
+
+	errTracer.userMessage = userMessage
+	errTracer.addData(additionalData)
+	return errTracer
+
+}
+
+func AddData(err error, additionalData map[string]any) error {
+	if err == nil {
+		return err
+	}
+
+	errTracer, ok := err.(*errorTracer)
+	if !ok {
+		return err
+	}
+
+	errTracer.addData(additionalData)
+	return errTracer
+}
+
+func Print(err error) string {
+	if err == nil {
+		return ""
+	}
+
+	errTracer, ok := err.(*errorTracer)
+	if !ok {
+		return err.Error()
+	}
+
+	return errTracer.print()
+}
+
+func newErrorTracer(originalMessage, userMessage string, additionalData map[string]any) *errorTracer {
+	errTracer := &errorTracer{
+		originalMessage: originalMessage,
+		userMessage:     userMessage,
+		stackTrace:      getCallerDetail(),
+	}
+
+	errTracer.addData(additionalData)
 
 	return errTracer
 }
 
-func (errTracer *errorTracer) addMoreData(additionalData map[string]interface{}) {
+func (errTracer *errorTracer) addData(additionalData map[string]any) {
 	if additionalData == nil {
 		return
 	}
 
 	if errTracer.additionalData == nil {
-		errTracer.additionalData = make(map[string]interface{})
+		errTracer.additionalData = make(map[string]any)
 	}
 
 	for k, v := range additionalData {
@@ -94,82 +113,43 @@ func (errTracer *errorTracer) addMoreData(additionalData map[string]interface{})
 	}
 }
 
-func (errTracer *errorTracer) addTrace(skip int) {
-	if errTracer.stackTrace == nil {
-		errTracer.createStackTrace()
-	}
-
-	if errTracer.traceCount == len(errTracer.stackTrace) {
-		errTracer.growStackTrace()
-	}
-
-	errTracer.stackTrace[errTracer.traceCount] = getCallerDetail(skip)
-	errTracer.traceCount++
+func getCallerDetail() []uintptr {
+	const depth = 32
+	var pcs [depth]uintptr
+	n := runtime.Callers(5, pcs[:])
+	return pcs[0:n]
 }
 
-func (errTracer *errorTracer) createStackTrace() {
-	if stackSize < DEFAULT_STACK_SIZE {
-		selfInit()
-	}
-
-	errTracer.stackTrace = make([]string, stackSize)
-}
-
-func (errTracer *errorTracer) growStackTrace() {
-	newTraces := make([]string, 2*len(errTracer.stackTrace))
-	copy(newTraces, errTracer.stackTrace)
-	errTracer.stackTrace = newTraces
-}
-
-func getCallerDetail(skip int) string {
-	pc := make([]uintptr, 10)
-	runtime.Callers(skip, pc)
-	f := runtime.FuncForPC(pc[0])
-	file, line := f.FileLine(pc[0])
-	caller := fmt.Sprintf("%s:%d %s", file, line, f.Name())
-
-	return caller
-}
-
-func (errTracer *errorTracer) log() {
+func (errTracer *errorTracer) print() string {
 	var sb strings.Builder
 
-	sb.WriteString(fmt.Sprintf("Original Error: %s\n", errTracer.getOriginalError()))
-	sb.WriteString(fmt.Sprintf("Custom Error: %s\n\n", errTracer.getCustomError()))
+	sb.WriteString("Original Error: ")
+	sb.WriteString(errTracer.originalMessage)
+	sb.WriteString("\nUser Message: ")
+	sb.WriteString(errTracer.userMessage)
 
-	sb.WriteString(fmt.Sprintf("Traces: \n%s\n", errTracer.getStackTraceList()))
+	sb.WriteString("\n\nTraces: \n")
+	for k := range errTracer.stackTrace {
+		v := errTracer.stackTrace[k] - 1
+		f := runtime.FuncForPC(v)
+		file, line := f.FileLine(v)
 
-	sb.WriteString(fmt.Sprintf("Additional Data: %s", errTracer.getAdditionalDataList()))
-
-	fmt.Println(sb.String())
-}
-
-func (errTracer *errorTracer) getOriginalError() string {
-	return errTracer.originalError
-}
-
-func (errTracer *errorTracer) getCustomError() string {
-	return errTracer.customError
-}
-
-func (errTracer *errorTracer) getStackTraceList() string {
-	var str string
-	for _, v := range errTracer.stackTrace {
-		if v == "" {
-			break
-		}
-		str += v + "\n"
+		sb.WriteString(f.Name())
+		sb.WriteString("\n\t")
+		sb.WriteString(file)
+		sb.WriteString(":")
+		sb.WriteString(strconv.Itoa(line))
+		sb.WriteString("\n")
 	}
 
-	return str
-}
-
-func (errTracer *errorTracer) getAdditionalDataList() string {
-	var str string
+	sb.WriteString("\nAdditional Data: ")
 	for key, value := range errTracer.additionalData {
 		jsonStr, _ := json.Marshal(value)
-		str += fmt.Sprintf("\n%s: %v", key, string(jsonStr))
+		sb.WriteString("\n")
+		sb.WriteString(key)
+		sb.WriteString(": ")
+		sb.WriteString(string(jsonStr))
 	}
 
-	return str
+	return sb.String()
 }

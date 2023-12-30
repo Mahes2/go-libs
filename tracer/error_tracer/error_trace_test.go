@@ -8,9 +8,16 @@ import (
 func TestNewError(t *testing.T) {
 	originalErr := "this is a sample exception"
 	customErr := "internal server error"
+
 	newError := NewError(originalErr, customErr)
+
+	_, ok := newError.(*errorTracer)
+	if !ok {
+		t.Errorf("new error is not errorTracer")
+	}
+
 	if newError.Error() != customErr {
-		t.Errorf("new error is not as expected: %s", customErr)
+		t.Errorf("got error: %s, expected: %s", newError.Error(), customErr)
 	}
 }
 
@@ -19,88 +26,106 @@ func TestNewErrorWithData(t *testing.T) {
 	additionalData := map[string]interface{}{
 		"name": "go-libs",
 	}
+
 	newError := NewErrorWithData(originalErr, "", additionalData)
+
+	errTracer, ok := newError.(*errorTracer)
+	if !ok {
+		t.Errorf("new error is not errorTracer")
+	}
+
 	if newError.Error() != originalErr {
-		t.Errorf("new error is not as expected: %s", originalErr)
+		t.Errorf("got error: %s, expected: %s", newError.Error(), originalErr)
+	}
+
+	if len(errTracer.additionalData) != len(additionalData) {
+		t.Errorf("got data length is: %d, want: %d", len(errTracer.additionalData), len(additionalData))
 	}
 }
 
 func TestWrapError(t *testing.T) {
 	err := fmt.Errorf("this is a sample exception")
-	newError := WrapAndLog(err)
+
+	newError := Wrap(err, "")
+
+	_, ok := newError.(*errorTracer)
+	if !ok {
+		t.Errorf("new error is not errorTracer")
+	}
+
 	if newError.Error() != err.Error() {
-		t.Errorf("new error is not as expected: %s", err.Error())
+		t.Errorf("got error: %s, expected: %s", newError.Error(), err.Error())
 	}
 }
 
-func TestWrapErrorWithAdditionalData(t *testing.T) {
+func TestWrapErrorWithData(t *testing.T) {
 	err := fmt.Errorf("this is a sample exception")
-	newError := WrapWithDataAndLog(err, map[string]interface{}{
+	additionalData := map[string]interface{}{
 		"name": "go-libs",
-	})
+	}
+
+	newError := WrapWithData(err, "", additionalData)
+
+	errTracer, ok := newError.(*errorTracer)
+	if !ok {
+		t.Errorf("new error is not errorTracer")
+	}
+
 	if newError.Error() != err.Error() {
-		t.Errorf("new error is not as expected: %s", err.Error())
+		t.Errorf("got error: %s, expected: %s", newError.Error(), err.Error())
+	}
+
+	if len(errTracer.additionalData) != len(additionalData) {
+		t.Errorf("got data length is: %d, want: %d", len(errTracer.additionalData), len(additionalData))
 	}
 }
 
-func TestGrowStackTraceSize(t *testing.T) {
-	err := fmt.Errorf("this is a sample exception")
-	newError := Wrap(err)
-	newError = WrapWithData(newError, map[string]interface{}{
+func TestAddData(t *testing.T) {
+	err := &errorTracer{
+		originalMessage: "this is a sample exception",
+	}
+	additionalData := map[string]interface{}{
 		"name": "go-libs",
-	})
-	newError = Wrap(newError)
-	newError = WrapWithData(newError, map[string]interface{}{
-		"name": "go-libs",
-	})
-	newError = Wrap(newError)
-	newError = WrapWithData(newError, map[string]interface{}{
-		"name": "go-libs",
-	})
-	newError = Wrap(newError)
-	newError = WrapWithData(newError, map[string]interface{}{
-		"name": "go-libs",
-	})
-	newError = Wrap(newError)
-	newError = WrapWithData(newError, map[string]interface{}{
-		"name": "go-libs",
-	})
-	newError = Wrap(newError)
-	newError = WrapWithData(newError, map[string]interface{}{
-		"name": "go-libs",
-	})
-	newError = Wrap(newError)
-	newError = WrapWithData(newError, map[string]interface{}{
-		"name": "go-libs",
-	})
-	if newError.Error() != err.Error() {
-		t.Errorf("new error is not as expected: %s", err.Error())
+	}
+
+	newError := AddData(err, additionalData)
+
+	errTracer, ok := newError.(*errorTracer)
+	if !ok {
+		t.Errorf("new error is not errorTracer")
+	}
+
+	if len(errTracer.additionalData) != 1 {
+		t.Errorf("got data length is: %d, want: %d", len(errTracer.additionalData), len(additionalData))
 	}
 }
 
-func BenchmarkWrapError100(b *testing.B) {
+func TestPrint(t *testing.T) {
+	originalErr := "this is a sample exception"
+	customErr := "internal server error"
+	additionalData := map[string]interface{}{
+		"name": "go-libs",
+	}
+
+	newError := NewErrorWithData(originalErr, customErr, additionalData)
+	output := Print(newError)
+
+	if output == "" {
+		t.Errorf("got empty output")
+	}
+}
+
+func BenchmarkWrapError(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		err := fmt.Errorf("this is a sample exception")
-		for j := 0; j < 100; j++ {
-			err = Wrap(err)
-		}
+		_ = Wrap(err, "")
 	}
 }
 
-func BenchmarkWrapError10000(b *testing.B) {
+func BenchmarkWrapAndPrintError(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		err := fmt.Errorf("this is a sample exception")
-		for j := 0; j < 10000; j++ {
-			err = Wrap(err)
-		}
-	}
-}
-
-func BenchmarkWrapError1000000(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		err := fmt.Errorf("this is a sample exception")
-		for j := 0; j < 1000000; j++ {
-			err = Wrap(err)
-		}
+		err = Wrap(err, "")
+		_ = Print(err)
 	}
 }
